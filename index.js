@@ -14,8 +14,8 @@ app.use(cors());
 
 app.use('/public', express.static(__dirname+"/public"));
 
-app.use('/', indexRouter);
 app.use('/api/books', bookRouter);
+app.use('/', indexRouter);
 
 app.use(errorMiddleware);
 

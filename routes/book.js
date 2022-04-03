@@ -30,15 +30,18 @@ router.get('/:id', (req, res) => {
     }
 });
 
-router.post('/', (req, res) => {
+router.post('/', fileMiddleware.single('cover-img'), (req, res) => {
     const {books} = stor;
-    const {title, description, favorite, fileCover, fileName, fileBook} = req.body;
-
-    const newBook = new Book(title, description, favorite, fileCover, fileName, fileBook);
-    books.push(newBook);
-
-    res.status(201);
-    res.json(newBook);
+    const {title, description, favorite, fileCover, fileName} = req.body;
+    if (req.file) {
+        const fileBook = req.file.filename;
+        const newBook = new Book(title, description, favorite, fileCover, fileName, fileBook);
+        books.push(newBook);
+        res.status(201);
+        res.json(newBook);
+    } else {
+        res.json(null);
+    }
 });
 
 router.put('/:id', (req, res) => {
@@ -78,22 +81,22 @@ router.delete('/:id', (req, res) => {
     }
 });
 
-// загрузка файлов
-router.post('/upload-img', fileMiddleware.single('cover-img'), (req, res) => {
-    if (req.file) {
-        const {path} = req.file;
-        res.json(path);
-    } else {
-        res.json(null);
-    }
-});
-
 router.get('/:id/download', (req, res) => {
-    res.download(__dirname + '/../public/img/cover.png', 'cover.png', err=>{
-        if (err){
-            res.status(404).json();
-        }
-    });
+    const {books} = stor;
+    const {id} = req.params;
+    const index = books.findIndex(el => el.id === id);
+
+    if (index !== -1) {
+        const fileName = books[index].fileBook;
+        res.download(__dirname + `/../public/img/${fileName}`, fileName, err=>{
+            if (err){
+                res.status(404).json();
+            }
+        });
+    } else {
+        res.status(404);
+        res.json("book | not found");
+    }
 });
 
 module.exports = router;
